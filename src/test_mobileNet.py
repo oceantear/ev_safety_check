@@ -118,10 +118,10 @@ def resetCounter():
 
 def chekc_elevator(msg):
     global startCheck, chekc_elevator_time_start
+
     print("[chekc_elevator]")
     resetCounter()
     chekc_elevator_time_start = time.time()
-    
     
     startCheck = True   
     t = Timer(chekc_elevatorTimer ,chekc_elevatorCB)
@@ -144,7 +144,7 @@ def chekc_elevatorCB():
         totalTime = chekc_elevator_time_end - chekc_elevator_time_start
 
     print ('[chekc_elevatorCB] time: ' + str(totalTime) )
-    if imagePredictionCount == 0:
+    if imagePredictionCount <= 1:
         rospy.logerr("Count of Image is ZERO, Please check camera!!")
         rospy.loginfo("T0 report unsafe")
         checkCBPub.publish(False)
