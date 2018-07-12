@@ -43,10 +43,13 @@ result = model.predict(np.zeros((1,224,224,3)))
 startCheck = False
 continuousSafetyCheckStartFlag = False
 
+
 totalTime = 0
 imagePredictionCount = 0
 safeCount = 0
 unSafeCount = 0
+chekc_elevator_time_start = 0
+chekc_elevator_time_end = 0
 continuousCheckImageDetectionCountThreshold = 2
 continuousCheckUnsafeThreshold = 1
 chekc_elevatorTimer = 3
@@ -86,7 +89,7 @@ def imagePrediction(data):
         elif label[0] == 1:
             unSafeCount = unSafeCount + 1
         
-        print("[imagePrediction] ",' time: ',totalTime ,"safeCount = ",safeCount ,"unsafeCount = ",unSafeCount, "Duration = ", end2 - start1)
+        print("[Prediction]",'time:',totalTime ,"safeCount =",safeCount ,"unsafeCount =",unSafeCount, "Duration =", end2 - start1)
         totalTime = totalTime + (end2 - start1)
 
         if continuousSafetyCheckStartFlag == True:
@@ -102,21 +105,23 @@ def imagePrediction(data):
     return
 
 def resetCounter():
-    global safeCount, unSafeCount, imagePredictionCount, totalTime
+    global safeCount, unSafeCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end
 
     safeCount = 0
     unSafeCount = 0
     imagePredictionCount = 0
     totalTime = 0
+    chekc_elevator_time_start = 0
+    chekc_elevator_time_end = 0
 
     return
 
 def chekc_elevator(msg):
     global startCheck, chekc_elevator_time_start
     print("[chekc_elevator]")
-
-    chekc_elevator_time_start = time.time()
     resetCounter()
+    chekc_elevator_time_start = time.time()
+    
     
     startCheck = True   
     t = Timer(chekc_elevatorTimer ,chekc_elevatorCB)
@@ -126,7 +131,8 @@ def chekc_elevator(msg):
     return
 
 def chekc_elevatorCB():
-    global safeCount, unSafeCount, startCheck, checkCBPub, imagePredictionCount, chekc_elevator_time_start, totalTime
+    global safeCount, unSafeCount, startCheck, checkCBPub
+    global imagePredictionCount, chekc_elevator_time_start, chekc_elevator_time_end, totalTime
 
     startCheck = False
     print ('[chekc_elevatorCB] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
@@ -154,11 +160,12 @@ def chekc_elevatorCB():
     return
 
 def continuousSafetyCheckStart(msg):
-    global startCheck, continuousSafetyCheckStartFlag
+    global startCheck, continuousSafetyCheckStartFlag, chekc_elevator_time_start
 
+    resetCounter()
+    chekc_elevator_time_start = time.time()
     continuousSafetyCheckStartFlag = True
     startCheck = True
-    resetCounter()
     
     t1 = Timer(continuousSafetyCheckTimer1 ,continuousSafetyCheckT1CB)
     t1.daemon = True
@@ -172,14 +179,20 @@ def continuousSafetyCheckStart(msg):
 
 
 def continuousSafetyCheckT1CB():
-    global imagePredictionCount, continuousSafetyCheckStartFlag, continuousCheckImageDetectionCountThreshold
+    global imagePredictionCount 
+    global continuousSafetyCheckStartFlag
+    global continuousCheckImageDetectionCountThreshold
+    global chekc_elevator_time_start, chekc_elevator_time_end
 
-
+    
     if imagePredictionCount < continuousCheckImageDetectionCountThreshold:
         lock.acquire()
         if continuousSafetyCheckStartFlag:
+            chekc_elevator_time_end = time.time()
+            totalTime = chekc_elevator_time_end - chekc_elevator_time_start
             rospy.logerr("Count of image is ZERO, Please check camera!!")
             rospy.loginfo("continuous T1 report unsafe")
+            rospy.loginfo("[TotalTime] : " + str(totalTime))
             continuousSafetyCheckResultUnsafePub.publish(True)
         else:
             rospy.loginfo("T1: report unsafe, but ignore publishing it, ImageDetectionCount = " + str(imagePredictionCount))
