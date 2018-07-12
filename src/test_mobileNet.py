@@ -14,8 +14,6 @@ from keras.utils import np_utils
 from keras.models import Sequential
 from keras.layers import Dense,Dropout,Flatten,Conv2D,MaxPooling2D
 from keras.models import load_model
-#keras 2.1.9
-#from keras.applications.mobilenet import relu6, DepthwiseConv2D
 from keras_applications.mobilenet import relu6
 from keras.layers import convolutional
 from keras.applications.imagenet_utils import decode_predictions
@@ -30,7 +28,10 @@ print(packPath)
 bridge = CvBridge()
 lock = Lock()
 
-# load
+checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
+continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
+
+# load model
 modelFileName = packPath + "/models/mobileNet_ex1.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
@@ -39,46 +40,33 @@ model = load_model(modelFileName,custom_objects={
 # this line makes code not crashed
 result = model.predict(np.zeros((1,224,224,3)))  
 
-checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
-continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
-
 startCheck = False
 continuousSafetyCheckStartFlag = False
 
 totalTime = 0
-imagePredictioncount = 0
+imagePredictionCount = 0
 safeCount = 0
 unSafeCount = 0
-continuousSafetyImageDetectionCountThreshold = 2
-continuousSafetyCheckScoreThreshold = 1
+continuousCheckImageDetectionCountThreshold = 2
+continuousCheckUnsafeThreshold = 1
 chekc_elevatorTimer = 3
 continuousSafetyCheckTimer1 = 0.5
 continuousSafetyCheckTimer2 = 3
 
 
 def imagePrediction(data):
-    global safeCount, unSafeCount, imagePredictioncount, startCheck, totalTime, continuousSafetyCheckStartFlag, continuousSafetyCheckScoreThreshold
-    #print("==[callback]==")
-    # if the startCheck flag is not True, return immediately
+    global safeCount, unSafeCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag, continuousCheckUnsafeThreshold
+    
     if not startCheck:
         return
         
-    
     start1  = time.time()
-    imagePredictioncount = imagePredictioncount + 1
-    #print("[callback] count :",count ,"time :", time.asctime (time.localtime(start1) ))
-    #print("[callback] data =", data)
-    #print("[callback] data size =", sys.getsizeof(data))
-
-
-
+    imagePredictionCount = imagePredictionCount + 1
+    
     try:
         cv2_img = bridge.imgmsg_to_cv2(data, "bgr8")
-        #cv2.imshow("Image window", cv2_img)
-        #cv2.waitKey(1)
         cv2_img = cv2.resize(cv2_img, (224, 224))
         
-        # resize, grey out ...etc
     except CvBridgeError as e:
         print(e)
     else:
@@ -86,16 +74,10 @@ def imagePrediction(data):
         np_img = np.reshape(cv2_img, (1,224,224,3)).astype('float32')
         np_img_normalized = np_img/255
         
-        #end1 = time.time()
-
-        #start2 = time.time()
-
-        #prediction = model.predict_classes(np_img_normalized, verbose=0)
         prediction = model.predict(np_img_normalized, verbose=0)
         label = prediction.argmax(axis=-1)
         #print ("prediction = ",prediction)
         #print ('result = ', label[0])
-        
         end2 = time.time()
 
         #0: safe, 1: unsafe
@@ -108,9 +90,9 @@ def imagePrediction(data):
         totalTime = totalTime + (end2 - start1)
 
         if continuousSafetyCheckStartFlag == True:
-            #print ('time: ',totalTime ,'[continuousSafetyCheck] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
+            
             lock.acquire()
-            if unSafeCount >= continuousSafetyCheckScoreThreshold:
+            if unSafeCount >= continuousCheckUnsafeThreshold:
                 print("continuousSafetyCheckT1CB: unsafey!!!!")
                 continuousSafetyCheckResultUnsafePub.publish(True)
                 continuousSafetyCheckStartFlag = False
@@ -119,12 +101,12 @@ def imagePrediction(data):
    
     return
 
-def clearCounter():
-    global safeCount, unSafeCount, imagePredictioncount, totalTime
+def resetCounter():
+    global safeCount, unSafeCount, imagePredictionCount, totalTime
 
     safeCount = 0
     unSafeCount = 0
-    imagePredictioncount = 0
+    imagePredictionCount = 0
     totalTime = 0
 
     return
@@ -134,7 +116,7 @@ def chekc_elevator(msg):
     print("[chekc_elevator]")
 
     chekc_elevator_time_start = time.time()
-    clearCounter()
+    resetCounter()
     
     startCheck = True   
     t = Timer(chekc_elevatorTimer ,chekc_elevatorCB)
@@ -144,11 +126,11 @@ def chekc_elevator(msg):
     return
 
 def chekc_elevatorCB():
-    global safeCount, unSafeCount, startCheck, checkCBPub, imagePredictioncount, chekc_elevator_time_start, totalTime
-    #print("chekc_elevatorCB safeCount =",safeCount)
+    global safeCount, unSafeCount, startCheck, checkCBPub, imagePredictionCount, chekc_elevator_time_start, totalTime
+
     startCheck = False
     print ('[chekc_elevatorCB] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
-    print ('[chekc_elevatorCB] count: ' + str(imagePredictioncount) )
+    print ('[chekc_elevatorCB] count: ' + str(imagePredictionCount) )
     
     chekc_elevator_time_end = time.time()
     
@@ -156,14 +138,13 @@ def chekc_elevatorCB():
         totalTime = chekc_elevator_time_end - chekc_elevator_time_start
 
     print ('[chekc_elevatorCB] time: ' + str(totalTime) )
-    if imagePredictioncount == 0:
+    if imagePredictionCount == 0:
         rospy.logerr("Count of Image is ZERO, Please check camera!!")
         rospy.loginfo("T0 report unsafe")
-        #startCheck = False
         checkCBPub.publish(False)
         return
 
-    checkResult = float(safeCount) / float(imagePredictioncount - 1)
+    checkResult = float(safeCount) / float(imagePredictionCount - 1)
     if checkResult >= 0.9:
         checkCBPub.publish(True)
     else:
@@ -177,7 +158,7 @@ def continuousSafetyCheckStart(msg):
 
     continuousSafetyCheckStartFlag = True
     startCheck = True
-    clearCounter()
+    resetCounter()
     
     t1 = Timer(continuousSafetyCheckTimer1 ,continuousSafetyCheckT1CB)
     t1.daemon = True
@@ -191,17 +172,17 @@ def continuousSafetyCheckStart(msg):
 
 
 def continuousSafetyCheckT1CB():
-    global imagePredictioncount, continuousSafetyCheckStartFlag, continuousSafetyImageDetectionCountThreshold
+    global imagePredictionCount, continuousSafetyCheckStartFlag, continuousCheckImageDetectionCountThreshold
 
 
-    if imagePredictioncount < continuousSafetyImageDetectionCountThreshold:
+    if imagePredictionCount < continuousCheckImageDetectionCountThreshold:
         lock.acquire()
         if continuousSafetyCheckStartFlag:
             rospy.logerr("Count of image is ZERO, Please check camera!!")
             rospy.loginfo("continuous T1 report unsafe")
             continuousSafetyCheckResultUnsafePub.publish(True)
         else:
-            rospy.loginfo("T1: report unsafe, but ignore publishing it, ImageDetectionCount = " + str(imagePredictioncount))
+            rospy.loginfo("T1: report unsafe, but ignore publishing it, ImageDetectionCount = " + str(imagePredictionCount))
         lock.release()
     
     return
@@ -217,12 +198,10 @@ def continuousSafetyCheckT2CB():
 
 def main(args):
     rospy.init_node('ev_safty_check_test', anonymous=True)
-    #image_sub = rospy.Subscriber("/camera_rear/tag_detections", Image, callback)
+    #image_sub = rospy.Subscriber("/camera_rear/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
     image_sub = rospy.Subscriber("/usb_cam/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
     rospy.Subscriber('/checkEV',Bool,chekc_elevator)
     rospy.Subscriber('/continuousSafetyCheckStart', Bool, continuousSafetyCheckStart)
-
-    #now = rospy.Time.now()
     rospy.spin()
 
 if __name__ == '__main__':
