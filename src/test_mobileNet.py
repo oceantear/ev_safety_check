@@ -89,8 +89,9 @@ def imagePrediction(data):
         elif label[0] == 1:
             unSafeCount = unSafeCount + 1
         
-        print("[Prediction]",'time:',totalTime ,"safeCount =",safeCount ,"unsafeCount =",unSafeCount, "Duration =", end2 - start1)
         totalTime = totalTime + (end2 - start1)
+        print("[Prediction]",'time:',totalTime ,"safeCount =",safeCount ,"unsafeCount =",unSafeCount, "Duration =", end2 - start1)
+        
 
         if continuousSafetyCheckStartFlag == True:
             
