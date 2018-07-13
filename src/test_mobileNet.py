@@ -224,7 +224,7 @@ def main(args):
     rospy.init_node('ev_safty_check_test', anonymous=True)
     #image_sub = rospy.Subscriber("/camera_rear/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
     rospy.Subscriber("/usb_cam/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
-    rospy.Subscriber('/checkEV',Bool,chekc_elevator,queue_size=1)
+    rospy.Subscriber('/checkEV',Bool,chekc_elevator)
     rospy.Subscriber('/continuousSafetyCheckStart', Bool, continuousSafetyCheckStart)
     rospy.spin()
 
