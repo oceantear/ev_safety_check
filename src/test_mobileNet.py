@@ -42,6 +42,9 @@ result = model.predict(np.zeros((1,224,224,3)))
 
 startCheck = False
 continuousSafetyCheckStartFlag = False
+chekc_elevator_function_flag = False
+continuousSafetyCheck_function_flag = False
+
 
 
 totalTime = 0
@@ -118,21 +121,23 @@ def resetCounter():
     return
 
 def chekc_elevator(msg):
-    global startCheck, chekc_elevator_time_start
-
-    print("[chekc_elevator]")
-    resetCounter()
-    chekc_elevator_time_start = time.time()
+    global startCheck, chekc_elevator_time_start, chekc_elevator_function_flag
     
-    startCheck = True   
-    t = Timer(chekc_elevatorTimer ,chekc_elevatorCB)
-    t.daemon = True
-    t.start()
+    if chekc_elevator_function_flag == False:
+        print("[chekc_elevator]")
+        chekc_elevator_function_flag = True
+        resetCounter()
+        chekc_elevator_time_start = time.time()
+        
+        startCheck = True   
+        t = Timer(chekc_elevatorTimer ,chekc_elevatorCB)
+        t.daemon = True
+        t.start()
     
     return
 
 def chekc_elevatorCB():
-    global safeCount, unSafeCount, startCheck, checkCBPub
+    global safeCount, unSafeCount, startCheck, checkCBPub, chekc_elevator_function_flag
     global imagePredictionCount, chekc_elevator_time_start, chekc_elevator_time_end, totalTime
 
     startCheck = False
@@ -157,24 +162,28 @@ def chekc_elevatorCB():
     else:
         checkCBPub.publish(False)
     
-    
+    chekc_elevator_function_flag = False
+
     return
 
 def continuousSafetyCheckStart(msg):
-    global startCheck, continuousSafetyCheckStartFlag, chekc_elevator_time_start
+    global startCheck, continuousSafetyCheckStartFlag, chekc_elevator_time_start, continuousSafetyCheck_function_flag
 
-    resetCounter()
-    chekc_elevator_time_start = time.time()
-    continuousSafetyCheckStartFlag = True
-    startCheck = True
-    
-    t1 = Timer(continuousSafetyCheckTimer1 ,continuousSafetyCheckT1CB)
-    t1.daemon = True
-    t1.start()
+    if continuousSafetyCheck_function_flag == False:
+        print("[continuousSafetyCheckStart]")
+        continuousSafetyCheck_function_flag = True
+        resetCounter()
+        chekc_elevator_time_start = time.time()
+        continuousSafetyCheckStartFlag = True
+        startCheck = True
+        
+        t1 = Timer(continuousSafetyCheckTimer1 ,continuousSafetyCheckT1CB)
+        t1.daemon = True
+        t1.start()
 
-    t2 = Timer(continuousSafetyCheckTimer2 ,continuousSafetyCheckT2CB)
-    t2.daemon = True
-    t2.start()
+        t2 = Timer(continuousSafetyCheckTimer2 ,continuousSafetyCheckT2CB)
+        t2.daemon = True
+        t2.start()
 
     return
 
@@ -202,19 +211,20 @@ def continuousSafetyCheckT1CB():
     return
 
 def continuousSafetyCheckT2CB():
-    global startCheck , continuousSafetyCheckStartFlag
+    global startCheck , continuousSafetyCheckStartFlag, continuousSafetyCheck_function_flag
     
     startCheck = False
     continuousSafetyCheckStartFlag = False
-    
+    continuousSafetyCheck_function_flag = False
+
     return
          
 
 def main(args):
     rospy.init_node('ev_safty_check_test', anonymous=True)
     #image_sub = rospy.Subscriber("/camera_rear/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
-    image_sub = rospy.Subscriber("/usb_cam/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
-    rospy.Subscriber('/checkEV',Bool,chekc_elevator)
+    rospy.Subscriber("/usb_cam/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
+    rospy.Subscriber('/checkEV',Bool,chekc_elevator,queue_size=1)
     rospy.Subscriber('/continuousSafetyCheckStart', Bool, continuousSafetyCheckStart)
     rospy.spin()
 
