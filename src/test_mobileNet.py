@@ -51,6 +51,11 @@ totalTime = 0
 imagePredictionCount = 0
 safeCount = 0
 unSafeCount = 0
+
+continuousSafetyCheckScore = 0
+continuousSafetyCheckLPFGain = 0.9
+continuousSafetyCheckScore = 1.0
+
 chekc_elevator_time_start = 0
 chekc_elevator_time_end = 0
 continuousCheckImageDetectionCountThreshold = 2
@@ -59,15 +64,48 @@ chekc_elevatorTimer = 3
 continuousSafetyCheckTimer1 = 0.5
 continuousSafetyCheckTimer2 = 3
 
+def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
+
+    # print dstSize   # (height, width)
+    # print dstSize[0] #224
+    # print dstSize[1] #224
+    # print srcImage.shape[0] #480
+    # print srcImage.shape[1] #640
+
+    h1 = dstSize[0] * srcImage.shape[0] / srcImage.shape[1]
+    w2 = dstSize[1] * srcImage.shape[1] / srcImage.shape[0]
+
+    # print h1
+    # print w2
+
+    if h1 <= dstSize[0]: 
+        dstImage = cv2.resize(srcImage, (int(dstSize[0]), int(h1)))
+    else:
+        dstImage = cv2.resize(srcImage, (int(w2), int(dstSize[1])))
+
+    # print dstImage.shape[0]  #168
+    # print dstImage.shape[1]  #224
+
+    top = int((dstSize[1] - dstImage.shape[0]) / 2)
+    down = int((dstSize[1] - dstImage.shape[0] + 1) / 2)
+    left = int((dstSize[0] - dstImage.shape[1]) / 2)
+    right = int((dstSize[0] - dstImage.shape[1] + 1) / 2)
+
+    # print top, down, left, right
+
+    output = cv2.copyMakeBorder(dstImage, top, down, left, right, cv2.BORDER_CONSTANT, value=bgColor)
+
+    return output
 
 def imagePrediction(data):
     global safeCount, unSafeCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag, continuousCheckUnsafeThreshold
+    global continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
     
     if not startCheck:
         return
         
     start1  = time.time()
-    imagePredictionCount = imagePredictionCount + 1
+    
     
     try:
         cv2_img = bridge.imgmsg_to_cv2(data, "bgr8")
@@ -82,7 +120,7 @@ def imagePrediction(data):
         
         prediction = model.predict(np_img_normalized, verbose=0)
         label = prediction.argmax(axis=-1)
-        #print ("prediction = ",prediction)
+        print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
         #print ('result = ', label[0])
         end2 = time.time()
 
@@ -95,11 +133,15 @@ def imagePrediction(data):
         totalTime = totalTime + (end2 - start1)
         print("[Prediction]",'time:',totalTime ,"safeCount =",safeCount ,"unsafeCount =",unSafeCount, "Duration =", end2 - start1)
         
+        continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
+        print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
+
+        imagePredictionCount = imagePredictionCount + 1
 
         if continuousSafetyCheckStartFlag == True:
-            
+                        
             lock.acquire()
-            if unSafeCount >= continuousCheckUnsafeThreshold:
+            if continuousSafetyCheckScore < continuousSafetyCheckLPFGain:
                 print("continuousSafetyCheckT1CB: unsafey!!!!")
                 continuousSafetyCheckResultUnsafePub.publish(True)
                 continuousSafetyCheckStartFlag = False
@@ -109,7 +151,7 @@ def imagePrediction(data):
     return
 
 def resetCounter():
-    global safeCount, unSafeCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end
+    global safeCount, unSafeCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end, continuousSafetyCheckScore
 
     safeCount = 0
     unSafeCount = 0
@@ -117,6 +159,7 @@ def resetCounter():
     totalTime = 0
     chekc_elevator_time_start = 0
     chekc_elevator_time_end = 0
+    continuousSafetyCheckScore = 1.0
 
     return
 
@@ -139,6 +182,7 @@ def chekc_elevator(msg):
 def chekc_elevatorCB():
     global safeCount, unSafeCount, startCheck, checkCBPub, chekc_elevator_function_flag
     global imagePredictionCount, chekc_elevator_time_start, chekc_elevator_time_end, totalTime
+    global continuousSafetyCheckScore
 
     startCheck = False
     print ('[chekc_elevatorCB] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
@@ -156,11 +200,18 @@ def chekc_elevatorCB():
         checkCBPub.publish(False)
         return
 
-    checkResult = float(safeCount) / float(imagePredictionCount - 1)
+    
+    '''checkResult = float(safeCount) / float(imagePredictionCount)
     if checkResult >= 0.9:
         checkCBPub.publish(True)
     else:
         checkCBPub.publish(False)
+    '''
+    if continuousSafetyCheckScore < continuousSafetyCheckLPFGain:
+        checkCBPub.publish(False)
+    else:
+        checkCBPub.publish(True)
+
     
     chekc_elevator_function_flag = False
 
@@ -200,6 +251,7 @@ def continuousSafetyCheckT1CB():
         if continuousSafetyCheckStartFlag:
             chekc_elevator_time_end = time.time()
             totalTime = chekc_elevator_time_end - chekc_elevator_time_start
+            continuousSafetyCheckStartFlag = False
             rospy.logerr("Count of image is ZERO, Please check camera!!")
             rospy.loginfo("continuous T1 report unsafe")
             rospy.loginfo("[TotalTime] : " + str(totalTime))
