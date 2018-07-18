@@ -109,7 +109,13 @@ def imagePrediction(data):
     
     try:
         cv2_img = bridge.imgmsg_to_cv2(data, "bgr8")
-        cv2_img = cv2.resize(cv2_img, (224, 224))
+        #cv2.imshow('original image',cv2_img)
+        #cv3_img = cv2.resize(cv2_img, (224, 224))
+        #cv2.imshow('directly resize',cv3_img)
+        #cv2.waitKey(0)
+        cv2_img = resizeKeepAspectRatio(cv2_img,(224,224),0)
+        #cv2.imshow('my resize',cv4_img)
+        #cv2.waitKey(0)
         
     except CvBridgeError as e:
         print(e)
@@ -120,6 +126,7 @@ def imagePrediction(data):
         
         prediction = model.predict(np_img_normalized, verbose=0)
         label = prediction.argmax(axis=-1)
+        #safe : prediction[0][0] unsafe : prediction[0][1]
         print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
         #print ('result = ', label[0])
         end2 = time.time()
