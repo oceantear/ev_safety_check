@@ -21,6 +21,16 @@ InputTestUnSafeDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/test/unsafe/
 writeTestSafeDir ="/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/safe/"
 writeTestUnSafeDir ="/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/unsafe/"
 
+InputTrainCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/train/car/"
+InputTestCarDir  = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/test/car/"
+
+OutputTrainCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/train/car/"
+OutputTestCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/car/"
+
+InputDir = InputTestCarDir
+OutputDir = OutputTestCarDir
+
+
 FileExtentionNameJPG = "jpg"
 FileExtentionNameJPEG = "jpeg"
 
@@ -109,9 +119,9 @@ def genExtentionFileName(shiftTx,zoomIn):
 def main(args):
 
 
-    for fname in os.listdir( InputTestUnSafeDir ):
+    for fname in os.listdir( InputDir ):
         if fname.endswith( FileExtentionNameJPEG ):
-            srcImage = cv2.imread( InputTestUnSafeDir + fname )
+            srcImage = cv2.imread( InputDir + fname )
             #cv2.imshow('srcImage',srcImage)
             #cv2.waitKey(0)
 
@@ -125,7 +135,7 @@ def main(args):
                     print ("extensionName = ",extensionName)
                     #cv2.waitKey(0)
                     str = fname.split("."+ FileExtentionNameJPEG )
-                    cv2.imwrite( writeTestUnSafeDir + str[0] + extensionName+'.jpeg', outputImage )
+                    cv2.imwrite( OutputDir + str[0] + extensionName+'.jpeg', outputImage )
 
 
 
