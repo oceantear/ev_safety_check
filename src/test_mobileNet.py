@@ -32,7 +32,7 @@ checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
 continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
 
 # load model
-modelFileName = packPath + "/models/mobileNet_ex1.h5"
+modelFileName = packPath + "/models/mobileNet_car.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -49,6 +49,7 @@ continuousSafetyCheck_function_flag = False
 
 totalTime = 0
 imagePredictionCount = 0
+carCount = 0
 safeCount = 0
 unSafeCount = 0
 
@@ -98,8 +99,8 @@ def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
     return output
 
 def imagePrediction(data):
-    global safeCount, unSafeCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag, continuousCheckUnsafeThreshold
-    global continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
+    global carCount, safeCount, unSafeCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag
+    global continuousCheckUnsafeThreshold, continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
     
     if not startCheck:
         return
@@ -108,6 +109,7 @@ def imagePrediction(data):
     
     
     try:
+        
         cv2_img = bridge.imgmsg_to_cv2(data, "bgr8")
         #cv2.imshow('original image',cv2_img)
         #cv3_img = cv2.resize(cv2_img, (224, 224))
@@ -125,20 +127,23 @@ def imagePrediction(data):
         np_img_normalized = np_img/255
         
         prediction = model.predict(np_img_normalized, verbose=0)
+        print("prediction = ",prediction)
         label = prediction.argmax(axis=-1)
         #safe : prediction[0][0] unsafe : prediction[0][1]
-        print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
-        #print ('result = ', label[0])
+        #print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
+        print ('result = ', label[0])
         end2 = time.time()
 
-        #0: safe, 1: unsafe
+        #0:car, 1:safe, 2:unsafe
         if label[0] == 0:
-            safeCount = safeCount + 1
+            carCount = carCount + 1
         elif label[0] == 1:
+            safeCount = safeCount + 1
+        elif label[0] == 2:
             unSafeCount = unSafeCount + 1
         
         totalTime = totalTime + (end2 - start1)
-        print("[Prediction]",'time:',totalTime ,"safeCount =",safeCount ,"unsafeCount =",unSafeCount, "Duration =", end2 - start1)
+        print("[Prediction]",'time:',totalTime ,"carCount =",carCount,"safeCount =",safeCount ,"unsafeCount =",unSafeCount, "Duration =", end2 - start1)
         
         continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
         print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
@@ -158,8 +163,9 @@ def imagePrediction(data):
     return
 
 def resetCounter():
-    global safeCount, unSafeCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end, continuousSafetyCheckScore
+    global carCount, safeCount, unSafeCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end, continuousSafetyCheckScore
 
+    carCount = 0
     safeCount = 0
     unSafeCount = 0
     imagePredictionCount = 0
