@@ -6,9 +6,9 @@ from pynput.keyboard import Key, Listener
 import sys, termios, tty, os, time
 import shutil
 
-ImagePath = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/unsafe/"
+ImagePath = "/home/jimmy/ev_safety_check/Img/preprossedImg/test/car/"
 MoveImgTo = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/safe/"
-ControversialImgPath = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/controversial/"
+ControversialImgPath = "/home/jimmy/ev_safety_check/Img/preprossedImg/controversial/"
 button_delay = 0.2
 
 def getch():
