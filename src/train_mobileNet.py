@@ -13,9 +13,9 @@ from datetime import datetime
 from keras.models import Model
 from keras.layers import Input, Dense, GlobalAveragePooling2D
 
-train_dir = '/home/advrobot/keras_Fine_Tuning_VGG16/train'
-validation_dir = '/home/advrobot/keras_Fine_Tuning_VGG16/test'
-save_model_name = 'mobileNet_ex1.h5'
+train_dir = '/home/advrobot/ev_safety_check/train'
+validation_dir = '/home/advrobot/ev_safety_check/test'
+save_model_name = '/home/advrobot/ev_safety_check/models/mobileNet_car.h5'
 image_size = 224
 
 
@@ -26,7 +26,7 @@ base_model = MobileNet(weights='imagenet', include_top=False, input_shape=(image
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
 x = Dense(1024, activation='relu')(x)
-predictions = Dense(2, activation='softmax')(x)
+predictions = Dense(3, activation='softmax')(x)
 
 model = Model(inputs=base_model.input, outputs=predictions)
 model.summary()
@@ -56,6 +56,10 @@ validation_generator = validation_datagen.flow_from_directory(
         batch_size=val_batchsize,
         class_mode='categorical',
         shuffle=False)
+
+# Get the label to class mapping from the generator
+label2index = validation_generator.class_indices
+print('label2index = ',label2index)
 
 # Compile the model
 model.compile(loss='categorical_crossentropy',
