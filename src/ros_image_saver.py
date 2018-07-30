@@ -19,16 +19,16 @@ def callback(data):
 
     try:
         cv2_image = bridge.imgmsg_to_cv2(data, "bgr8")
-        cv2_image_64x48 = cv2.resize(cv2_image, (64, 48))
+        #cv2_image_64x48 = cv2.resize(cv2_image, (64, 48))
         # resize, grey out ...etc
     except CvBridgeError as e:
         print(e)
     else:
         #cv2.imwrite('camera_image.jpeg', cv2_image)
         now = rospy.Time.now()
-        fname = str(now) + "_64x48.jpeg"
+        fname = str(now) + ".jpeg"
         #print(str(now) + "_img.jpeg")
-        cv2.imwrite(fname, cv2_image_64x48)
+        cv2.imwrite(fname, cv2_image)
         
 
 def main(args):
