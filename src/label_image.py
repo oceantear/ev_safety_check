@@ -6,9 +6,9 @@ from pynput.keyboard import Key, Listener
 import sys, termios, tty, os, time
 import shutil
 
-ImagePath = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/unsafe/"
+ImagePath = "/home/jimmy/ev_safety_check/image/preprossedImg/test/manypeople/"
 MoveImgTo = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/safe/"
-ControversialImgPath = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/controversial/"
+ControversialImgPath = "/home/jimmy/ev_safety_check/image/preprossedImg/controversial/"
 button_delay = 0.2
 
 def getch():
@@ -35,6 +35,7 @@ def main(args):
         if fname.endswith( "jpeg" ):
             print '====== ',i,' ======'
             print 'fname :',fname
+            
             srcImage = cv2.imread( ImagePath + fname )
             cv2.imshow('srcImage',srcImage)
             cv2.waitKey(10)
@@ -52,6 +53,7 @@ def main(args):
             else:
                 print  keyboardInput
                 time.sleep(button_delay)
+                
             i += 1
 
 if __name__ == '__main__':
