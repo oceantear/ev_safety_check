@@ -32,7 +32,7 @@ checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
 continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
 
 # load model
-modelFileName = packPath + "/models/mobileNet_car.h5"
+modelFileName = packPath + "/models/mobileNet_4labels_with_virtual_elevator.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -50,10 +50,15 @@ continuousSafetyCheck_function_flag = False
 totalTime = 0
 imagePredictionCount = 0
 carCount = 0
-safeCount = 0
-unSafeCount = 0
+fewpeopleCount = 0
+manypeopleCount = 0
+nopeopleCount = 0
 
-continuousSafetyCheckScore = 0
+carScore = 1.0
+fewPeopleScore = 1.0
+manyPeopleScore = 1.0
+noPeopleScore = 1.0
+
 continuousSafetyCheckLPFGain = 0.9
 continuousSafetyCheckScore = 1.0
 
@@ -99,8 +104,9 @@ def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
     return output
 
 def imagePrediction(data):
-    global carCount, safeCount, unSafeCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag
+    global carCount, fewpeopleCount, manypeopleCount, nopeopleCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag
     global continuousCheckUnsafeThreshold, continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
+    global carScore, fewPeopleScore, manyPeopleScore, noPeopleScore
     
     if not startCheck:
         return
@@ -134,19 +140,28 @@ def imagePrediction(data):
         print ('result = ', label[0])
         end2 = time.time()
 
-        #0:car, 1:safe, 2:unsafe
+        #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
         if label[0] == 0:
             carCount = carCount + 1
         elif label[0] == 1:
-            safeCount = safeCount + 1
+            fewpeopleCount = fewpeopleCount + 1
         elif label[0] == 2:
-            unSafeCount = unSafeCount + 1
+            manypeopleCount = manypeopleCount + 1
+        elif label[0] == 3:
+            nopeopleCount = nopeopleCount + 1
         
         totalTime = totalTime + (end2 - start1)
-        print("[Prediction]",'time:',totalTime ,"carCount =",carCount,"safeCount =",safeCount ,"unsafeCount =",unSafeCount, "Duration =", end2 - start1)
+        print("[Prediction]",'time:',totalTime ,"carCount =",carCount,"fewpeopleCount =",fewpeopleCount ,"manypeopleCount =",manypeopleCount, "nopeopleCount =",nopeopleCount)
         
         continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
         print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
+
+        carScore = continuousSafetyCheckLPFGain * carScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
+        fewPeopleScore = continuousSafetyCheckLPFGain * fewPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][1]
+        manyPeopleScore = continuousSafetyCheckLPFGain * manyPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][2]
+        noPeopleScore = continuousSafetyCheckLPFGain * noPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][3]
+
+        print("carScore =",carScore,"fewPeopleScore =",fewPeopleScore,"manyPeopleScore =",manyPeopleScore ,"noPeopleScore =",noPeopleScore)
 
         imagePredictionCount = imagePredictionCount + 1
 
@@ -163,16 +178,23 @@ def imagePrediction(data):
     return
 
 def resetCounter():
-    global carCount, safeCount, unSafeCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end, continuousSafetyCheckScore
+    global carCount, fewpeopleCount, manypeopleCount, nopeopleCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end, continuousSafetyCheckScore
+    global carScore, fewPeopleScore, manyPeopleScore, noPeopleScore
 
     carCount = 0
-    safeCount = 0
-    unSafeCount = 0
+    fewpeopleCount = 0
+    manypeopleCount = 0
+    nopeopleCount = 0
     imagePredictionCount = 0
     totalTime = 0
     chekc_elevator_time_start = 0
     chekc_elevator_time_end = 0
     continuousSafetyCheckScore = 1.0
+
+    carScore = 1.0
+    fewPeopleScore = 1.0
+    manyPeopleScore = 1.0
+    noPeopleScore = 1.0
 
     return
 
@@ -193,12 +215,13 @@ def chekc_elevator(msg):
     return
 
 def chekc_elevatorCB():
-    global safeCount, unSafeCount, startCheck, checkCBPub, chekc_elevator_function_flag
+    global startCheck, checkCBPub, chekc_elevator_function_flag
     global imagePredictionCount, chekc_elevator_time_start, chekc_elevator_time_end, totalTime
     global continuousSafetyCheckScore
 
     startCheck = False
-    print ('[chekc_elevatorCB] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
+    #print ('[chekc_elevatorCB] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
+    print("carScore =",carScore,"fewPeopleScore =",fewPeopleScore,"manyPeopleScore =",manyPeopleScore ,"noPeopleScore =",noPeopleScore)
     print ('[chekc_elevatorCB] count: ' + str(imagePredictionCount) )
     
     chekc_elevator_time_end = time.time()
