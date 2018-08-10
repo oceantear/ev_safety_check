@@ -70,6 +70,8 @@ chekc_elevatorTimer = 3
 continuousSafetyCheckTimer1 = 0.5
 continuousSafetyCheckTimer2 = 3
 
+
+
 def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
 
     # print dstSize   # (height, width)
@@ -307,6 +309,37 @@ def continuousSafetyCheckT2CB():
 
     return
          
+def singleTestCallback(msg):
+    global carCount, fewpeopleCount, manypeopleCount ,nopeopleCount
+    #fname = "/home/kkuei/catkin_ws/src/ev_safety_check/test/safe/1519704213556588888_64x48.jpeg"
+    #fname = "/home/jimmy/ev_safety_check/image/preprossedImg/train/manypeople/1533091323601748943_tx01_zoom13.jpeg"
+    print("msg = ",msg.data)
+    cv2_img = cv2.imread(msg.data)
+    #cv2.imshow('original image',cv2_img)
+    #cv2_img = resizeKeepAspectRatio(cv2_img,(224,224),0)
+
+    np_img = np.reshape(cv2_img, (1,224,224,3)).astype('float32')
+    np_img_normalized = np_img/255
+        
+    prediction = model.predict(np_img_normalized, verbose=0)
+    print("prediction = ",prediction)
+    label = prediction.argmax(axis=-1)
+        #safe : prediction[0][0] unsafe : prediction[0][1]
+        #print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
+    print ('result = ', label[0])
+    #end2 = time.time()
+
+    #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
+    if label[0] == 0:
+        carCount = carCount + 1
+    elif label[0] == 1:
+        fewpeopleCount = fewpeopleCount + 1
+    elif label[0] == 2:
+        manypeopleCount = manypeopleCount + 1
+    elif label[0] == 3:
+        nopeopleCount = nopeopleCount + 1
+
+    return
 
 def main(args):
     rospy.init_node('ev_safty_check_test', anonymous=True)
@@ -314,6 +347,7 @@ def main(args):
     #rospy.Subscriber("/usb_cam/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
     rospy.Subscriber('/checkEV',Bool,chekc_elevator)
     rospy.Subscriber('/continuousSafetyCheckStart', Bool, continuousSafetyCheckStart)
+    rospy.Subscriber('/singleTest', String ,singleTestCallback)
     rospy.spin()
 
 if __name__ == '__main__':

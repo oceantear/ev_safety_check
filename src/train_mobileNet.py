@@ -16,6 +16,7 @@ from keras.layers import Input, Dense, GlobalAveragePooling2D
 train_dir = '/home/advrobot/ev_safety_check/train'
 validation_dir = '/home/advrobot/ev_safety_check/test'
 save_model_name = '/home/advrobot/ev_safety_check/models/mobileNet_4labels_dense1024.h5'
+
 image_size = 224
 
 
