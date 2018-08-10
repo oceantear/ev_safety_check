@@ -15,7 +15,7 @@ from keras.layers import Input, Dense, GlobalAveragePooling2D
 
 train_dir = '/home/advrobot/ev_safety_check/train'
 validation_dir = '/home/advrobot/ev_safety_check/test'
-save_model_name = '/home/advrobot/ev_safety_check/models/mobileNet_car.h5'
+save_model_name = '/home/advrobot/ev_safety_check/models/mobileNet_4labels_dense1024.h5'
 image_size = 224
 
 
@@ -26,7 +26,7 @@ base_model = MobileNet(weights='imagenet', include_top=False, input_shape=(image
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
 x = Dense(1024, activation='relu')(x)
-predictions = Dense(3, activation='softmax')(x)
+predictions = Dense(4, activation='softmax')(x)
 
 model = Model(inputs=base_model.input, outputs=predictions)
 model.summary()
@@ -42,6 +42,8 @@ validation_datagen = ImageDataGenerator(rescale=1./255)
 train_batchsize = 20
 val_batchsize = 10
 
+print("saved model name: ",save_model_name)
+
 # Data Generator for Training data
 train_generator = train_datagen.flow_from_directory(
         train_dir,
@@ -55,11 +57,16 @@ validation_generator = validation_datagen.flow_from_directory(
         target_size=(image_size, image_size),
         batch_size=val_batchsize,
         class_mode='categorical',
-        shuffle=False)
+        shuffle=True)
+
+# Get the label to class mapping from the generator
+train_label2index = train_generator.class_indices
+print('train_label2index = ',train_label2index)
 
 # Get the label to class mapping from the generator
 label2index = validation_generator.class_indices
 print('label2index = ',label2index)
+
 
 # Compile the model
 model.compile(loss='categorical_crossentropy',
@@ -69,6 +76,7 @@ model.compile(loss='categorical_crossentropy',
 print("start training time = ",str(datetime.now()))
 
 # Train the Model
+
 history = model.fit_generator(
       train_generator,
       steps_per_epoch=train_generator.samples/train_generator.batch_size ,
@@ -110,7 +118,7 @@ validation_generator = validation_datagen.flow_from_directory(
         target_size=(image_size, image_size),
         batch_size=val_batchsize,
         class_mode='categorical',
-        shuffle=False)
+        shuffle=True)
 
 # Get the filenames from the generator
 fnames = validation_generator.filenames
