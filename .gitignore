@@ -1,6 +1,6 @@
 /test
 /train
-*.tar
+/validation
 *.tar
 readme
 
