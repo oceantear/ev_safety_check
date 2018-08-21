@@ -3,6 +3,7 @@ from __future__ import print_function
 
 from threading import Timer
 import sys
+import os
 import rospy
 import rospkg
 import numpy as np
@@ -32,7 +33,7 @@ checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
 continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
 
 # load model
-modelFileName = packPath + "/models/mobileNet_4labels_with_virtual_elevator.h5"
+modelFileName = packPath + "/models/4labels_AndewNDataClassfied_1280dense.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -70,7 +71,7 @@ chekc_elevatorTimer = 3
 continuousSafetyCheckTimer1 = 0.5
 continuousSafetyCheckTimer2 = 3
 
-
+processedNum = 0
 
 def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
 
@@ -341,6 +342,53 @@ def singleTestCallback(msg):
 
     return
 
+def folderTestCallback(msg):
+    global processedNum, carCount, fewpeopleCount , manypeopleCount, nopeopleCount
+
+    
+
+    #return 
+    path = "/home/jimmy/ev_safety_check/original_640_480/newTest/nopeople/"
+    for fname in os.listdir( path ):
+        print("fname = ",path + fname)
+        cv2_img = cv2.imread(path + fname)
+        try:#image : 224*224
+            np_img = np.reshape(cv2_img, (1,224,224,3)).astype('float32')
+        except ValueError:#image :640*480
+            cv2_img = resizeKeepAspectRatio(cv2_img,(224,224),0)
+            np_img = np.reshape(cv2_img, (1,224,224,3)).astype('float32')
+            #np_img_normalized = np_img/255
+        #else:
+        #    np_img_normalized = np_img/255
+            
+        np_img_normalized = np_img/255
+        prediction = model.predict(np_img_normalized, verbose=0)
+        print("prediction = ",prediction)
+        label = prediction.argmax(axis=-1)
+
+        #print ('result = ', label[0])
+
+        #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
+        if label[0] == 0:
+            carCount = carCount + 1
+        elif label[0] == 1:
+            fewpeopleCount = fewpeopleCount + 1
+        elif label[0] == 2:
+            manypeopleCount = manypeopleCount + 1
+        elif label[0] == 3:
+            nopeopleCount = nopeopleCount + 1
+
+        processedNum = processedNum + 1
+
+        print("carCount =",carCount ,"fewpeopleCount =",fewpeopleCount ,"manypeopleCount =",manypeopleCount ,"nopeopleCount= ",nopeopleCount)
+
+    path, dirs, files = next(os.walk(path))
+    file_count = len(files)
+    print ("count = ",file_count)
+        
+
+    return
+
 def main(args):
     rospy.init_node('ev_safty_check_test', anonymous=True)
     image_sub = rospy.Subscriber("/camera_rear/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
@@ -348,6 +396,7 @@ def main(args):
     rospy.Subscriber('/checkEV',Bool,chekc_elevator)
     rospy.Subscriber('/continuousSafetyCheckStart', Bool, continuousSafetyCheckStart)
     rospy.Subscriber('/singleTest', String ,singleTestCallback)
+    rospy.Subscriber('/folderTest', Bool ,folderTestCallback)
     rospy.spin()
 
 if __name__ == '__main__':
