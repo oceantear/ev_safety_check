@@ -32,7 +32,7 @@ checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
 continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
 
 # load model
-modelFileName = packPath + "/models/mobileNet_4labels_with_virtual_elevator.h5"
+modelFileName = packPath + "/models/4labels_AndewNDataClassfied_1280dense.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -53,13 +53,14 @@ carCount = 0
 fewpeopleCount = 0
 manypeopleCount = 0
 nopeopleCount = 0
+someoneCount = 0
 
 carScore = 1.0
 fewPeopleScore = 1.0
 manyPeopleScore = 1.0
 noPeopleScore = 1.0
 
-continuousSafetyCheckLPFGain = 0.9
+continuousSafetyCheckLPFGain = 0.5 #0.9
 continuousSafetyCheckScore = 1.0
 
 chekc_elevator_time_start = 0
@@ -107,9 +108,9 @@ def imagePrediction(data):
     global carCount, fewpeopleCount, manypeopleCount, nopeopleCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag
     global continuousCheckUnsafeThreshold, continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
     global carScore, fewPeopleScore, manyPeopleScore, noPeopleScore
-    
-    if not startCheck:
-        return
+    global someoneCount
+    #if not startCheck:
+    #    return
         
     start1  = time.time()
     
@@ -141,27 +142,33 @@ def imagePrediction(data):
         end2 = time.time()
 
         #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
-        if label[0] == 0:
-            carCount = carCount + 1
-        elif label[0] == 1:
-            fewpeopleCount = fewpeopleCount + 1
-        elif label[0] == 2:
-            manypeopleCount = manypeopleCount + 1
-        elif label[0] == 3:
-            nopeopleCount = nopeopleCount + 1
+        #if label[0] == 0:
+        #    carCount = carCount + 1
+        #elif label[0] == 1:
+        #    fewpeopleCount = fewpeopleCount + 1
+        #elif label[0] == 2:
+        #    manypeopleCount = manypeopleCount + 1
+        #elif label[0] == 3:
+        #    nopeopleCount = nopeopleCount + 1
+	if label[0] == 0 or label[0] == 1 or label[0] == 2:
+	   someoneCount = someoneCount + 1
+	elif label[0] == 3:
+	   nopeopleCount = nopeopleCount + 1
         
+	
         totalTime = totalTime + (end2 - start1)
-        print("[Prediction]",'time:',totalTime ,"carCount =",carCount,"fewpeopleCount =",fewpeopleCount ,"manypeopleCount =",manypeopleCount, "nopeopleCount =",nopeopleCount)
+        print("[Pred]",'time:',"%.4f" % totalTime ,"carCount =",carCount,"fewCount =",fewpeopleCount ,"manyCount =",manypeopleCount, "noCount =",nopeopleCount)
         
-        continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
-        print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
+        #continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
+        #continuousSafetyCheckScore =  
+	print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
 
         carScore = continuousSafetyCheckLPFGain * carScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
         fewPeopleScore = continuousSafetyCheckLPFGain * fewPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][1]
         manyPeopleScore = continuousSafetyCheckLPFGain * manyPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][2]
         noPeopleScore = continuousSafetyCheckLPFGain * noPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][3]
 
-        print("carScore =",carScore,"fewPeopleScore =",fewPeopleScore,"manyPeopleScore =",manyPeopleScore ,"noPeopleScore =",noPeopleScore)
+        print("carScore =","%.4f" % carScore,"fewScore =","%.4f" % fewPeopleScore,"manyScore =","%.4f" % manyPeopleScore ,"noScore =","%.4f" % noPeopleScore)
 
         imagePredictionCount = imagePredictionCount + 1
 
@@ -180,12 +187,13 @@ def imagePrediction(data):
 def resetCounter():
     global carCount, fewpeopleCount, manypeopleCount, nopeopleCount, imagePredictionCount, totalTime, chekc_elevator_time_start , chekc_elevator_time_end, continuousSafetyCheckScore
     global carScore, fewPeopleScore, manyPeopleScore, noPeopleScore
-
+    global someoneCount
     carCount = 0
     fewpeopleCount = 0
     manypeopleCount = 0
     nopeopleCount = 0
     imagePredictionCount = 0
+    someoneCount = 0
     totalTime = 0
     chekc_elevator_time_start = 0
     chekc_elevator_time_end = 0
