@@ -60,7 +60,7 @@ fewPeopleScore = 1.0
 manyPeopleScore = 1.0
 noPeopleScore = 1.0
 
-continuousSafetyCheckLPFGain = 0.5 #0.9
+continuousSafetyCheckLPFGain = 0.9 #0.9
 continuousSafetyCheckScore = 1.0
 
 chekc_elevator_time_start = 0
@@ -160,7 +160,7 @@ def imagePrediction(data):
         print("[Pred]",'time:',"%.4f" % totalTime ,"carCount =",carCount,"fewCount =",fewpeopleCount ,"manyCount =",manypeopleCount, "noCount =",nopeopleCount)
         
         #continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
-        #continuousSafetyCheckScore =  
+          
 	print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
 
         carScore = continuousSafetyCheckLPFGain * carScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
@@ -171,11 +171,12 @@ def imagePrediction(data):
         print("carScore =","%.4f" % carScore,"fewScore =","%.4f" % fewPeopleScore,"manyScore =","%.4f" % manyPeopleScore ,"noScore =","%.4f" % noPeopleScore)
 
         imagePredictionCount = imagePredictionCount + 1
+        continuousSafetyCheckScore = someoneCount / imagePredictionCount
 
         if continuousSafetyCheckStartFlag == True:
                         
             lock.acquire()
-            if continuousSafetyCheckScore < continuousSafetyCheckLPFGain:
+            if continuousSafetyCheckScore > continuousSafetyCheckLPFGain:
                 print("continuousSafetyCheckT1CB: unsafey!!!!")
                 continuousSafetyCheckResultUnsafePub.publish(True)
                 continuousSafetyCheckStartFlag = False
@@ -251,7 +252,7 @@ def chekc_elevatorCB():
     else:
         checkCBPub.publish(False)
     '''
-    if continuousSafetyCheckScore < continuousSafetyCheckLPFGain:
+    if continuousSafetyCheckScore > continuousSafetyCheckLPFGain:
         checkCBPub.publish(False)
     else:
         checkCBPub.publish(True)
