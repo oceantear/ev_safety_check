@@ -109,8 +109,8 @@ def imagePrediction(data):
     global continuousCheckUnsafeThreshold, continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
     global carScore, fewPeopleScore, manyPeopleScore, noPeopleScore
     global someoneCount
-    #if not startCheck:
-    #    return
+    if not startCheck:
+        return
         
     start1  = time.time()
     
