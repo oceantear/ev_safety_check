@@ -60,7 +60,7 @@ fewPeopleScore = 1.0
 manyPeopleScore = 1.0
 noPeopleScore = 1.0
 
-continuousSafetyCheckLPFGain = 0.8 #0.9
+continuousSafetyCheckLPFGain = 0.7 #0.9
 continuousSafetyCheckScore = 1.0
 
 chekc_elevator_time_start = 0
