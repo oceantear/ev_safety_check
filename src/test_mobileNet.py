@@ -172,8 +172,8 @@ def imagePrediction(data):
 
         imagePredictionCount = imagePredictionCount + 1
         continuousSafetyCheckScore = someoneCount / imagePredictionCount
-        print("someoneCount",someoneCount)
-        print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
+    
+        print("someoneCount =",someoneCount,"imagePredictionCount =",imagePredictionCount ,"continuousSafetyCheckScore = ",continuousSafetyCheckScore)
 
         if continuousSafetyCheckStartFlag == True:
                         
