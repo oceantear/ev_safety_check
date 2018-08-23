@@ -138,7 +138,7 @@ def imagePrediction(data):
         label = prediction.argmax(axis=-1)
         #safe : prediction[0][0] unsafe : prediction[0][1]
         #print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
-        print ('result = ', label[0])
+        #print ('result = ', label[0])
         end2 = time.time()
 
         #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
@@ -161,7 +161,7 @@ def imagePrediction(data):
         
         #continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
           
-	print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
+	
 
         carScore = continuousSafetyCheckLPFGain * carScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
         fewPeopleScore = continuousSafetyCheckLPFGain * fewPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][1]
@@ -172,6 +172,8 @@ def imagePrediction(data):
 
         imagePredictionCount = imagePredictionCount + 1
         continuousSafetyCheckScore = someoneCount / imagePredictionCount
+        print("someoneCount",someoneCount)
+        print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
 
         if continuousSafetyCheckStartFlag == True:
                         
