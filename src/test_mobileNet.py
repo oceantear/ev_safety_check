@@ -65,10 +65,10 @@ continuousSafetyCheckScore = 1.0
 
 chekc_elevator_time_start = 0
 chekc_elevator_time_end = 0
-continuousCheckImageDetectionCountThreshold = 2
+continuousCheckImageDetectionCountThreshold = 1
 continuousCheckUnsafeThreshold = 1
 chekc_elevatorTimer = 3
-continuousSafetyCheckTimer1 = 0.5
+continuousSafetyCheckTimer1 = 1
 continuousSafetyCheckTimer2 = 3
 
 def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
