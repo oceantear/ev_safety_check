@@ -33,7 +33,7 @@ checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
 continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
 
 # load model
-modelFileName = packPath + "/models/4labels_AndewNDataClassfied_1280dense.h5"
+modelFileName = packPath + "/models/4labels_AndewNDataClassfied_2denselayer_1014x1024.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -72,6 +72,7 @@ continuousSafetyCheckTimer1 = 0.5
 continuousSafetyCheckTimer2 = 3
 
 processedNum = 0
+wrongPredictionList = []
 
 def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
 
@@ -343,12 +344,12 @@ def singleTestCallback(msg):
     return
 
 def folderTestCallback(msg):
-    global processedNum, carCount, fewpeopleCount , manypeopleCount, nopeopleCount
+    global processedNum, carCount, fewpeopleCount , manypeopleCount, nopeopleCount ,wrongPredictionList
 
-    
+    print("folderTestCallback")
 
     #return 
-    path = "/home/jimmy/ev_safety_check/original_640_480/newTest/nopeople/"
+    path = "/home/jimmy/ev_safety_check/image/preprossedImg/test/fewpeople/"
     for fname in os.listdir( path ):
         print("fname = ",path + fname)
         cv2_img = cv2.imread(path + fname)
@@ -376,11 +377,16 @@ def folderTestCallback(msg):
         elif label[0] == 2:
             manypeopleCount = manypeopleCount + 1
         elif label[0] == 3:
+            wrongPredictionList.append(fname)
             nopeopleCount = nopeopleCount + 1
 
         processedNum = processedNum + 1
 
         print("carCount =",carCount ,"fewpeopleCount =",fewpeopleCount ,"manypeopleCount =",manypeopleCount ,"nopeopleCount= ",nopeopleCount)
+        
+        if len(wrongPredictionList) > 0:
+            for wrongPredtion in wrongPredictionList:
+                print ("fname = ",wrongPredtion)
 
     path, dirs, files = next(os.walk(path))
     file_count = len(files)
