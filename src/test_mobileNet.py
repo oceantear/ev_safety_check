@@ -19,7 +19,7 @@ from keras.layers import convolutional
 from keras.applications.imagenet_utils import decode_predictions
 import time
 from threading import Lock
-
+import math
 
 rospack = rospkg.RosPack()
 packPath = rospack.get_path('ev_safety_check')
@@ -114,7 +114,7 @@ def imagePrediction(data):
         
     start1  = time.time()
     ImageTime = data.header.stamp.secs + (data.header.stamp.nsecs / math.pow(10,9))
-    print("systemTime :", start1 ,"Imagetime sec :", ImageTime)
+    print("systemTime :","%.5f" % start1 ,"Imagetime sec :","%.5f" % ImageTime)
     SystemTime = start1
     print("time lag: ",start1 - ImageTime)
 
@@ -146,7 +146,7 @@ def imagePrediction(data):
         label = prediction.argmax(axis=-1)
         #safe : prediction[0][0] unsafe : prediction[0][1]
         #print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
-        #print ('result = ', label[0])
+        print ('result = ', label[0])
         end2 = time.time()
 
         #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
