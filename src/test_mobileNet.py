@@ -113,10 +113,15 @@ def imagePrediction(data):
         return
         
     start1  = time.time()
-    imageTime = time.asctime( time.localtime(data.header.stamp.secs) )
-    systemTime = time.asctime( time.localtime(start1) )
+    ImageTime = data.header.stamp.secs + (data.header.stamp.nsecs / math.pow(10,9))
+    print("systemTime :", start1 ,"Imagetime sec :", ImageTime)
+    SystemTime = start1
+    print("time lag: ",start1 - ImageTime)
+
+    formatImageTime = time.asctime( time.localtime(data.header.stamp.secs) )
+    formatSystemTime = time.asctime( time.localtime(start1) )
     
-    print("systemTime :", systemTime ,"Imagetime sec :", imageTime)
+    #print("systemTime :", systemTime ,"Imagetime sec :", imageTime)
     
     try:
         
