@@ -106,7 +106,7 @@ def resizeKeepAspectRatio(srcImage, dstSize, bgColor):
 
 def imagePrediction(data):
     global carCount, fewpeopleCount, manypeopleCount, nopeopleCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag
-    global continuousCheckUnsafeThreshold, continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
+    global continuousCheckUnsafeThreshold, continuousSafetyCheckScore, continuousSafetyCheckLPFGain
     global carScore, fewPeopleScore, manyPeopleScore, noPeopleScore
     global someoneCount
     if not startCheck:
@@ -183,7 +183,7 @@ def imagePrediction(data):
         print("carScore =","%.4f" % carScore,"fewScore =","%.4f" % fewPeopleScore,"manyScore =","%.4f" % manyPeopleScore ,"noScore =","%.4f" % noPeopleScore)
 
         imagePredictionCount = imagePredictionCount + 1
-        continuousSafetyCheckScore = someoneCount / imagePredictionCount
+        continuousSafetyCheckScore = float(someoneCount) / imagePredictionCount
     
         print("someoneCount =",someoneCount,"imagePredictionCount =",imagePredictionCount ,"continuousSafetyCheckScore = ",continuousSafetyCheckScore)
 
@@ -225,7 +225,7 @@ def chekc_elevator(msg):
     global startCheck, chekc_elevator_time_start, chekc_elevator_function_flag
     
     if chekc_elevator_function_flag == False:
-        print("[chekc_elevator]")
+        print("=====[chekc_elevator]===== ")
         chekc_elevator_function_flag = True
         resetCounter()
         chekc_elevator_time_start = time.time()
@@ -252,7 +252,7 @@ def chekc_elevatorCB():
     if totalTime == 0:
         totalTime = chekc_elevator_time_end - chekc_elevator_time_start
 
-    print ('[chekc_elevatorCB] time: ' + str(totalTime) )
+    print ('[chekc_elevatorCB] time: ' + str(totalTime) ,"\n\n\n")
     if imagePredictionCount <= 1:
         rospy.logerr("Count of Image is ZERO, Please check camera!!")
         rospy.loginfo("T0 report unsafe")
@@ -280,7 +280,7 @@ def continuousSafetyCheckStart(msg):
     global startCheck, continuousSafetyCheckStartFlag, chekc_elevator_time_start, continuousSafetyCheck_function_flag
 
     if continuousSafetyCheck_function_flag == False:
-        print("[continuousSafetyCheckStart]")
+        print("======[continuousSafetyCheckStart]======")
         continuousSafetyCheck_function_flag = True
         resetCounter()
         chekc_elevator_time_start = time.time()
