@@ -113,7 +113,10 @@ def imagePrediction(data):
         return
         
     start1  = time.time()
+    imageTime = time.asctime( time.localtime(data.header.stamp.secs) )
+    systemTime = time.asctime( time.localtime(start1) )
     
+    print("systemTime :", systemTime ,"Imagetime sec :", imageTime)
     
     try:
         
