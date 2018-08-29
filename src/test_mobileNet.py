@@ -161,7 +161,6 @@ def imagePrediction(data):
             someoneCount = someoneCount + 1
         elif label[0] == 3:
             nopeopleCount = nopeopleCount + 1
-            nopeopleCount = nopeopleCount + 1
 	#if label[0] == 0 or label[0] == 1 or label[0] == 2:
 	#   someoneCount = someoneCount + 1
 	#elif label[0] == 3:
