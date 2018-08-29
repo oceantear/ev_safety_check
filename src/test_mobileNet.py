@@ -150,18 +150,22 @@ def imagePrediction(data):
         end2 = time.time()
 
         #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
-        #if label[0] == 0:
-        #    carCount = carCount + 1
-        #elif label[0] == 1:
-        #    fewpeopleCount = fewpeopleCount + 1
-        #elif label[0] == 2:
-        #    manypeopleCount = manypeopleCount + 1
-        #elif label[0] == 3:
-        #    nopeopleCount = nopeopleCount + 1
-	if label[0] == 0 or label[0] == 1 or label[0] == 2:
-	   someoneCount = someoneCount + 1
-	elif label[0] == 3:
-	   nopeopleCount = nopeopleCount + 1
+        if label[0] == 0:
+            carCount = carCount + 1
+            someoneCount = someoneCount + 1
+        elif label[0] == 1:
+            fewpeopleCount = fewpeopleCount + 1
+            someoneCount = someoneCount + 1
+        elif label[0] == 2:
+            manypeopleCount = manypeopleCount + 1
+            someoneCount = someoneCount + 1
+        elif label[0] == 3:
+            nopeopleCount = nopeopleCount + 1
+            nopeopleCount = nopeopleCount + 1
+	#if label[0] == 0 or label[0] == 1 or label[0] == 2:
+	#   someoneCount = someoneCount + 1
+	#elif label[0] == 3:
+	#   nopeopleCount = nopeopleCount + 1
         
 	
         totalTime = totalTime + (end2 - start1)
