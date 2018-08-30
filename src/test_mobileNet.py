@@ -239,7 +239,7 @@ def chekc_elevator(msg):
 def chekc_elevatorCB():
     global startCheck, checkCBPub, chekc_elevator_function_flag
     global imagePredictionCount, chekc_elevator_time_start, chekc_elevator_time_end, totalTime
-    global continuousSafetyCheckScore
+    global continuousSafetyCheckScore,continuousSafetyCheckLPFGain
 
     startCheck = False
     #print ('[chekc_elevatorCB] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
