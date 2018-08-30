@@ -266,8 +266,10 @@ def chekc_elevatorCB():
         checkCBPub.publish(False)
     '''
     if continuousSafetyCheckScore >= continuousSafetyCheckLPFGain:
+        print("checkEV T0 unsafe")
         checkCBPub.publish(False)
     else:
+        print("checkEV T0 safe")
         checkCBPub.publish(True)
 
     
