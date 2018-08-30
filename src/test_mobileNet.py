@@ -189,7 +189,7 @@ def imagePrediction(data):
         if continuousSafetyCheckStartFlag == True:
                         
             lock.acquire()
-            if continuousSafetyCheckScore > continuousSafetyCheckLPFGain:
+            if continuousSafetyCheckScore >= continuousSafetyCheckLPFGain:
                 print("continuousSafetyCheckT1CB: unsafey!!!!")
                 continuousSafetyCheckResultUnsafePub.publish(True)
                 continuousSafetyCheckStartFlag = False
@@ -239,12 +239,12 @@ def chekc_elevator(msg):
 def chekc_elevatorCB():
     global startCheck, checkCBPub, chekc_elevator_function_flag
     global imagePredictionCount, chekc_elevator_time_start, chekc_elevator_time_end, totalTime
-    global continuousSafetyCheckScore,continuousSafetyCheckLPFGain
+    global continuousSafetyCheckScore
 
     startCheck = False
     #print ('[chekc_elevatorCB] result(safe, unSafe): ' + str(safeCount) + ', ' + str(unSafeCount))
     #print("carScore =",carScore,"fewPeopleScore =",fewPeopleScore,"manyPeopleScore =",manyPeopleScore ,"noPeopleScore =",noPeopleScore)
-    print ('[chekc_elevatorCB] count: ' + str(imagePredictionCount) )
+    print ('[chekc_elevatorCB] count: ' + str(imagePredictionCount),"continuousSafetyCheckScore = ",continuousSafetyCheckScore )
     
     chekc_elevator_time_end = time.time()
     
@@ -265,7 +265,7 @@ def chekc_elevatorCB():
     else:
         checkCBPub.publish(False)
     '''
-    if continuousSafetyCheckScore > continuousSafetyCheckLPFGain:
+    if continuousSafetyCheckScore >= continuousSafetyCheckLPFGain:
         checkCBPub.publish(False)
     else:
         checkCBPub.publish(True)
