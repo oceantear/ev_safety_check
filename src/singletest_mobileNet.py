@@ -37,7 +37,7 @@ continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckRe
 #4labels_AndewNDataClassfied_2denselayer_1024x1024
 #4labels_AndewNDataClassfied_2denselayer_1024x1024_dropout25
 #4labels_AndewNDataClassfied_2denselayer_1280x1280
-modelFileName = packPath + "/models/4labels_AndewNDataClassfied_2denselayer_1024x1024_dropout25.h5"
+modelFileName = packPath + "/models/4labels_AndewNDataClassfied_1280dense_grayImage.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
