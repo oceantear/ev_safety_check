@@ -33,7 +33,11 @@ checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
 continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
 
 # load model
-modelFileName = packPath + "/models/4labels_AndewNDataClassfied_2denselayer_1014x1024.h5"
+#4labels_AndewNDataClassfied_1280dense
+#4labels_AndewNDataClassfied_2denselayer_1024x1024
+#4labels_AndewNDataClassfied_2denselayer_1024x1024_dropout25
+#4labels_AndewNDataClassfied_2denselayer_1280x1280
+modelFileName = packPath + "/models/4labels_AndewNDataClassfied_2denselayer_1024x1024_dropout25.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -318,7 +322,7 @@ def singleTestCallback(msg):
     print("msg = ",msg.data)
     cv2_img = cv2.imread(msg.data)
     #cv2.imshow('original image',cv2_img)
-    #cv2_img = resizeKeepAspectRatio(cv2_img,(224,224),0)
+    cv2_img = resizeKeepAspectRatio(cv2_img,(224,224),0)
 
     np_img = np.reshape(cv2_img, (1,224,224,3)).astype('float32')
     np_img_normalized = np_img/255
@@ -348,8 +352,9 @@ def folderTestCallback(msg):
 
     print("folderTestCallback")
 
-    #return 
-    path = "/home/jimmy/ev_safety_check/image/preprossedImg/test/fewpeople/"
+    #return
+    start1  = time.time() 
+    path = "/home/jimmy/ev_safety_check/image/preprossedImg/validation/fewpeople/"
     for fname in os.listdir( path ):
         print("fname = ",path + fname)
         cv2_img = cv2.imread(path + fname)
@@ -372,37 +377,121 @@ def folderTestCallback(msg):
         #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
         if label[0] == 0:
             carCount = carCount + 1
+            wrongPredictionList.append(fname)
         elif label[0] == 1:
             fewpeopleCount = fewpeopleCount + 1
         elif label[0] == 2:
             manypeopleCount = manypeopleCount + 1
-        elif label[0] == 3:
             wrongPredictionList.append(fname)
+        elif label[0] == 3:
             nopeopleCount = nopeopleCount + 1
+            wrongPredictionList.append(fname)
 
         processedNum = processedNum + 1
 
         print("carCount =",carCount ,"fewpeopleCount =",fewpeopleCount ,"manypeopleCount =",manypeopleCount ,"nopeopleCount= ",nopeopleCount)
         
-        if len(wrongPredictionList) > 0:
-            for wrongPredtion in wrongPredictionList:
-                print ("fname = ",wrongPredtion)
+    if len(wrongPredictionList) > 0:
+        for wrongPredtion in wrongPredictionList:
+            print ("wrong fname = ",wrongPredtion)
 
     path, dirs, files = next(os.walk(path))
     file_count = len(files)
     print ("count = ",file_count)
-        
+    start2  = time.time() 
+    print ("total time = ",start2 - start1)   
 
+    return
+
+def bagfileTestCallback(data):
+    global carCount, fewpeopleCount, manypeopleCount, nopeopleCount, imagePredictionCount, startCheck, totalTime, continuousSafetyCheckStartFlag
+    global continuousCheckUnsafeThreshold, continuousSafetyCheckScore, continuousSafetyCheckLPFGain, continuousSafetyCheckScore
+    global carScore, fewPeopleScore, manyPeopleScore, noPeopleScore
+    
+    #if not startCheck:
+    #    return
+        
+    start1  = time.time()
+    
+    
+    try:
+        
+        cv2_img = bridge.imgmsg_to_cv2(data, "bgr8")
+        #cv2.imshow('original image',cv2_img)
+        #cv3_img = cv2.resize(cv2_img, (224, 224))
+        #cv2.imshow('directly resize',cv3_img)
+        #cv2.waitKey(0)
+        cv2_img = resizeKeepAspectRatio(cv2_img,(224,224),0)
+        #cv2.imshow('my resize',cv4_img)
+        #cv2.waitKey(0)
+        
+    except CvBridgeError as e:
+        print(e)
+    else:
+    
+        np_img = np.reshape(cv2_img, (1,224,224,3)).astype('float32')
+        np_img_normalized = np_img/255
+        
+        prediction = model.predict(np_img_normalized, verbose=0)
+        print("prediction = ",prediction)
+        label = prediction.argmax(axis=-1)
+        #safe : prediction[0][0] unsafe : prediction[0][1]
+        #print ("prediction = ",prediction[0][0] ,", ",prediction[0][1])
+        print ('result = ', label[0])
+        end2 = time.time()
+
+        #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
+        if label[0] == 0:
+            carCount = carCount + 1
+        elif label[0] == 1:
+            fewpeopleCount = fewpeopleCount + 1
+        elif label[0] == 2:
+            manypeopleCount = manypeopleCount + 1
+        elif label[0] == 3:
+            nopeopleCount = nopeopleCount + 1
+        
+        totalTime = totalTime + (end2 - start1)
+        print("[Prediction]",'time:',totalTime ,"carCount =",carCount,"fewpeopleCount =",fewpeopleCount ,"manypeopleCount =",manypeopleCount, "nopeopleCount =",nopeopleCount)
+        
+        continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
+        print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)
+
+        carScore = continuousSafetyCheckLPFGain * carScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
+        fewPeopleScore = continuousSafetyCheckLPFGain * fewPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][1]
+        manyPeopleScore = continuousSafetyCheckLPFGain * manyPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][2]
+        noPeopleScore = continuousSafetyCheckLPFGain * noPeopleScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][3]
+
+        print("carScore =",carScore,"fewPeopleScore =",fewPeopleScore,"manyPeopleScore =",manyPeopleScore ,"noPeopleScore =",noPeopleScore)
+
+        imagePredictionCount = imagePredictionCount + 1
+
+        '''if continuousSafetyCheckStartFlag == True:
+                        
+            lock.acquire()
+            if continuousSafetyCheckScore < continuousSafetyCheckLPFGain:
+                print("continuousSafetyCheckT1CB: unsafey!!!!")
+                continuousSafetyCheckResultUnsafePub.publish(True)
+                continuousSafetyCheckStartFlag = False
+                startCheck = False
+            lock.release()
+        '''
+    return
+
+def resetCounterCallback(data):
+    resetCounter()
     return
 
 def main(args):
     rospy.init_node('ev_safty_check_test', anonymous=True)
-    image_sub = rospy.Subscriber("/camera_rear/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
+    #image_sub = rospy.Subscriber("/camera_rear/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
     #rospy.Subscriber("/usb_cam/image_rect_color", Image, imagePrediction, queue_size=1 ,buff_size=5000000)
     rospy.Subscriber('/checkEV',Bool,chekc_elevator)
     rospy.Subscriber('/continuousSafetyCheckStart', Bool, continuousSafetyCheckStart)
     rospy.Subscriber('/singleTest', String ,singleTestCallback)
     rospy.Subscriber('/folderTest', Bool ,folderTestCallback)
+    
+    rospy.Subscriber("/camera_rear/image_rect_color", Image, bagfileTestCallback, queue_size=1 ,buff_size=5000000)
+    rospy.Subscriber('/resetCounter', Bool ,resetCounterCallback)
     rospy.spin()
 
 if __name__ == '__main__':

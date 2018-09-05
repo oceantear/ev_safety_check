@@ -6,7 +6,7 @@ from pynput.keyboard import Key, Listener
 import sys, termios, tty, os, time
 import shutil
 
-ImagePath = "/home/jimmy/ev_safety_check/image/preprossedImg/test/manypeople/"
+ImagePath = "/home/jimmy/ev_safety_check/image/preprossedImg/alldata/gray/"
 MoveImgTo = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/safe/"
 ControversialImgPath = "/home/jimmy/ev_safety_check/image/preprossedImg/controversial/"
 button_delay = 0.2

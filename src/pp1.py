@@ -27,8 +27,11 @@ InputTestCarDir  = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/test/car/"
 OutputTrainCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/train/car/"
 OutputTestCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/car/"
 
-InputDir = InputTestCarDir
-OutputDir = OutputTestCarDir
+InputGrayDir = "/home/jimmy/ev_safety_check/original_640_480/elevator/gray/fewpeople/all/"
+OutputGrayDir = "/home/jimmy/ev_safety_check/image/preprossedImg/alldata/gray/"
+
+InputDir = InputGrayDir
+OutputDir = OutputGrayDir
 
 
 FileExtentionNameJPG = "jpg"
