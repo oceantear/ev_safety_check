@@ -6,7 +6,7 @@ from pynput.keyboard import Key, Listener
 import sys, termios, tty, os, time
 import shutil
 
-ImagePath = "/home/jimmy/ev_safety_check/image/preprossedImg/alldata/gray/"
+ImagePath = "/home/jimmy/ev_safety_check/image/preprossedImg/20180910/all/car/"
 MoveImgTo = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/safe/"
 ControversialImgPath = "/home/jimmy/ev_safety_check/image/preprossedImg/controversial/"
 button_delay = 0.2
@@ -36,9 +36,11 @@ def main(args):
             print '====== ',i,' ======'
             print 'fname :',fname
             
+            cv2.namedWindow('image',cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('image', 900,900)
             srcImage = cv2.imread( ImagePath + fname )
-            cv2.imshow('srcImage',srcImage)
-            cv2.waitKey(10)
+            cv2.imshow('image',srcImage)
+            cv2.waitKey(30)
             keyboardInput = getch()
             print  keyboardInput
             if keyboardInput == "q":

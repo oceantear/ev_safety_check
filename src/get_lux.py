@@ -27,9 +27,11 @@ def main(args):
     /home/jimmy/Documents/image_rect_color_screenshot_04.09.2018.png                                            130
     /home/jimmy/Documents/image_rect_color_screenshot_06.09.2018.png                                            139
     /home/jimmy/Documents/image_rect_color_screenshot_06.09.2018_6.png                                          129
+    /home/jimmy/Documents/image_rect_color_screenshot_07.09.2018_onelight.png:                                  126.978007373
+    /home/jimmy/Documents/image_rect_color_screenshot_07.09.2018_all_light.png                                  141.008660879
     '''
 
-    imag = Image.open("/home/jimmy/Documents/black.png")                       
+    imag = Image.open("/home/jimmy/Documents/image_rect_color_screenshot_07.09.2018_all_light.png").convert('L')                       
     stat = ImageStat.Stat(imag)
     print("average pixel brightness",stat.mean[0])
 
