@@ -11,11 +11,11 @@ from keras import layers
 from keras import optimizers
 from datetime import datetime
 from keras.models import Model
-from keras.layers import Input, Dense, GlobalAveragePooling2D
+from keras.layers import Input, Dense, GlobalAveragePooling2D, Dropout
 
 train_dir = '/home/advrobot/ev_safety_check/train'
-validation_dir = '/home/advrobot/ev_safety_check/test'
-save_model_name = '/home/advrobot/ev_safety_check/models/mobileNet_4labels_dense1024.h5'
+validation_dir = '/home/advrobot/ev_safety_check/validation'
+save_model_name = '/home/advrobot/ev_safety_check/models/mobileNet_4labels_dense1024x1024_dropout25_all_gray_image.h5'
 image_size = 224
 
 
@@ -26,6 +26,9 @@ base_model = MobileNet(weights='imagenet', include_top=False, input_shape=(image
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
 x = Dense(1024, activation='relu')(x)
+x = Dropout(0.25)(x)
+x = Dense(1024, activation='relu')(x)
+x = Dropout(0.25)(x)
 predictions = Dense(4, activation='softmax')(x)
 
 model = Model(inputs=base_model.input, outputs=predictions)
