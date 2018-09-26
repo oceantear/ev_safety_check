@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
+#import os
+#os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 import numpy as np
 import matplotlib.pyplot as plt
 import keras
@@ -14,7 +16,7 @@ from keras.models import Model
 from keras.layers import Input, Dense, GlobalAveragePooling2D, Dropout
 
 train_dir = '/home/advrobot/ev_safety_check/train'
-validation_dir = '/home/advrobot/ev_safety_check/validation'
+validation_dir = '/home/advrobot/ev_safety_check/test'
 save_model_name = '/home/advrobot/ev_safety_check/models/mobileNet_4labels_dense1024x1024_dropout25_all_gray_image.h5'
 image_size = 224
 
