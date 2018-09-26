@@ -32,7 +32,7 @@ checkCBPub = rospy.Publisher('/checkEVcb',Bool,queue_size=1)
 continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckResultUnsafe',Bool,queue_size=1)
 
 # load model
-modelFileName = packPath + "/models/4labels_AndewNDataClassfied_1280dense_grayImage.h5"
+modelFileName = packPath + "/models/mobileNet_4labels_dense1024x1024_dropout25_all_gray_image.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})

@@ -37,7 +37,8 @@ continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckRe
 #4labels_AndewNDataClassfied_2denselayer_1024x1024
 #4labels_AndewNDataClassfied_2denselayer_1024x1024_dropout25
 #4labels_AndewNDataClassfied_2denselayer_1280x1280
-modelFileName = packPath + "/models/4labels_AndewNDataClassfied_1280dense_grayImage.h5"
+#mobileNet_4labels_dense1024x1024_dropout25_with_fullcolor_gray_image
+modelFileName = packPath + "/models/mobileNet_4labels_dense1024x1024_dropout25_with_fullcolor_gray_image.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -350,11 +351,11 @@ def singleTestCallback(msg):
 def folderTestCallback(msg):
     global processedNum, carCount, fewpeopleCount , manypeopleCount, nopeopleCount ,wrongPredictionList
 
-    print("folderTestCallback")
+    #print("folderTestCallback")
 
     #return
     start1  = time.time() 
-    path = "/home/jimmy/ev_safety_check/image/preprossedImg/validation/fewpeople/"
+    path = "/media/jimmy/DATA/ROS_bag_files/dark/T0_oneP/20180905/position1/2018-09-05-20-14-05/one_people/"
     for fname in os.listdir( path ):
         print("fname = ",path + fname)
         cv2_img = cv2.imread(path + fname)
@@ -372,20 +373,23 @@ def folderTestCallback(msg):
         print("prediction = ",prediction)
         label = prediction.argmax(axis=-1)
 
-        #print ('result = ', label[0])
+        print ('result = ', label[0])
 
         #0:car, 1:fewpeople, 2:manypeople, 3:nopeople
         if label[0] == 0:
             carCount = carCount + 1
-            wrongPredictionList.append(fname)
+            #wrongPredictionList.append(fname)
         elif label[0] == 1:
             fewpeopleCount = fewpeopleCount + 1
+            #wrongPredictionList.append(fname)           
         elif label[0] == 2:
             manypeopleCount = manypeopleCount + 1
-            wrongPredictionList.append(fname)
+            #wrongPredictionList.append(fname)
         elif label[0] == 3:
             nopeopleCount = nopeopleCount + 1
             wrongPredictionList.append(fname)
+            
+            
 
         processedNum = processedNum + 1
 
@@ -451,7 +455,7 @@ def bagfileTestCallback(data):
             nopeopleCount = nopeopleCount + 1
         
         totalTime = totalTime + (end2 - start1)
-        print("[Prediction]",'time:',totalTime ,"carCount =",carCount,"fewpeopleCount =",fewpeopleCount ,"manypeopleCount =",manypeopleCount, "nopeopleCount =",nopeopleCount)
+        print("[Prediction]",'time:',totalTime ,"car =",carCount,"fewp =",fewpeopleCount ,"manyp =",manypeopleCount, "nop =",nopeopleCount)
         
         continuousSafetyCheckScore = continuousSafetyCheckLPFGain * continuousSafetyCheckScore + (1.0 - continuousSafetyCheckLPFGain) * prediction[0][0]
         print("continuousSafetyCheckScore = ",continuousSafetyCheckScore)

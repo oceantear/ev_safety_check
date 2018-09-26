@@ -27,8 +27,8 @@ InputTestCarDir  = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/test/car/"
 OutputTrainCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/train/car/"
 OutputTestCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/car/"
 
-InputGrayDir = "/home/jimmy/ev_safety_check/original_640_480/elevator/gray/manypeople/all/"
-OutputGrayDir = "/home/jimmy/ev_safety_check/image/preprossedImg/alldata/gray/manypeople/"
+InputGrayDir = "/home/jimmy/ev_safety_check/original_640_480/elevator/alldata/alldata/nopeople/"
+OutputGrayDir = "/home/jimmy/ev_safety_check/image/preprossedImg/20180925/nopeople/"
 
 InputDir = InputGrayDir
 OutputDir = OutputGrayDir
@@ -166,9 +166,9 @@ def ladybug(args):
             #cv2.imwrite(ladybugPath+"resize"+'ladybug.jpeg',outputImage)
 
 def resize224():
-    for fname in os.listdir( InputTestUnSafeDir ):
+    for fname in os.listdir( InputDir ):
         if fname.endswith( FileExtentionNameJPEG ):
-            srcImage = cv2.imread( InputTestUnSafeDir + fname )
+            srcImage = cv2.imread( InputDir + fname )
             print fname
             #cv2.imshow('srcImage',srcImage)
             #cv2.waitKey(0)
@@ -181,7 +181,7 @@ def resize224():
             #cv2.waitKey(0)
 
             outputImage1 = preprocessImage(srcImage, 0, 1.0)
-            cv2.imshow('outputImage',outputImage1)
+            #cv2.imshow('outputImage',outputImage1)
             #cv2.waitKey(0)
                     #cv2.imshow('outputImage', outputImage)
                         
@@ -189,7 +189,7 @@ def resize224():
                     #print ("extensionName = ",extensionName)
                     #cv2.waitKey(0)
                     #str = fname.split("."+ FileExtentionNameJPEG )
-            cv2.imwrite( writeTestUnSafeDir + fname, outputImage1 )
+            cv2.imwrite( OutputDir + fname, outputImage1 )
 
 
 
@@ -204,6 +204,6 @@ def printshiftTx(args):
 
 if __name__ == '__main__':
     
-    main(sys.argv)
-    #resize224()
+    #main(sys.argv)
+    resize224()
     
