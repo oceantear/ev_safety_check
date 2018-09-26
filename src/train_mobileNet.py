@@ -41,8 +41,8 @@ train_datagen = ImageDataGenerator(rescale=1./255)
 validation_datagen = ImageDataGenerator(rescale=1./255)
 
 # Change the batchsize according to your system RAM
-train_batchsize = 20
-val_batchsize = 10
+train_batchsize = 130
+val_batchsize = 100
 
 print("saved model name: ",save_model_name)
 
@@ -51,7 +51,8 @@ train_generator = train_datagen.flow_from_directory(
         train_dir,
         target_size=(image_size, image_size),
         batch_size=train_batchsize,
-        class_mode='categorical')
+        class_mode='categorical',
+        shuffle=True)
 
 # Data Generator for Validation data
 validation_generator = validation_datagen.flow_from_directory(
@@ -85,7 +86,7 @@ history = model.fit_generator(
       epochs=20,
       validation_data=validation_generator,
       validation_steps=validation_generator.samples/validation_generator.batch_size,
-      verbose=2)
+      verbose=1)
 
 # Save the Model
 model.save(save_model_name)
@@ -135,7 +136,7 @@ label2index = validation_generator.class_indices
 idx2label = dict((v,k) for k,v in label2index.items())
 
 # Get the predictions from the model using the generator
-predictions = model.predict_generator(validation_generator, steps=validation_generator.samples/validation_generator.batch_size,verbose=2)
+predictions = model.predict_generator(validation_generator, steps=validation_generator.samples/validation_generator.batch_size,verbose=1)
 predicted_classes = np.argmax(predictions,axis=1)
 
 errors = np.where(predicted_classes != ground_truth)[0]
