@@ -27,8 +27,8 @@ InputTestCarDir  = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/test/car/"
 OutputTrainCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/train/car/"
 OutputTestCarDir = "/home/jimmy/catkin_ws/src/ev_safety_check/Img/preprossedImg/test/car/"
 
-InputGrayDir = "/home/jimmy/ev_safety_check/original_640_480/elevator/alldata/alldata/nopeople/"
-OutputGrayDir = "/home/jimmy/ev_safety_check/image/preprossedImg/20180925/nopeople/"
+InputGrayDir = "/home/jimmy/ev_safety_check/original_640_480/elevator/20180927/gray/fewpeople/ming/"
+OutputGrayDir = "/home/jimmy/ev_safety_check/image/preprossedImg/20180927/gray/fewpeople/"
 
 InputDir = InputGrayDir
 OutputDir = OutputGrayDir

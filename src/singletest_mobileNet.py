@@ -38,7 +38,7 @@ continuousSafetyCheckResultUnsafePub = rospy.Publisher('/continuousSafetyCheckRe
 #4labels_AndewNDataClassfied_2denselayer_1024x1024_dropout25
 #4labels_AndewNDataClassfied_2denselayer_1280x1280
 #mobileNet_4labels_dense1024x1024_dropout25_with_fullcolor_gray_image
-modelFileName = packPath + "/models/mobileNet_4labels_dense1024x1024_dropout25_with_fullcolor_gray_image.h5"
+modelFileName = packPath + "/models/12000sample_color2ndgray_batchsize100_epoch10.h5"
 model = load_model(modelFileName,custom_objects={
                    'relu6': relu6,
                    'DepthwiseConv2D': convolutional.DepthwiseConv2D})
@@ -355,7 +355,8 @@ def folderTestCallback(msg):
 
     #return
     start1  = time.time() 
-    path = "/media/jimmy/DATA/ROS_bag_files/dark/T0_oneP/20180905/position1/2018-09-05-20-14-05/one_people/"
+    path = "/home/jimmy/ev_safety_check/original_640_480/real_elevator/20181008/alldata/car/"
+    print ("path = ",path)
     for fname in os.listdir( path ):
         print("fname = ",path + fname)
         cv2_img = cv2.imread(path + fname)
@@ -381,10 +382,10 @@ def folderTestCallback(msg):
             #wrongPredictionList.append(fname)
         elif label[0] == 1:
             fewpeopleCount = fewpeopleCount + 1
-            #wrongPredictionList.append(fname)           
+            wrongPredictionList.append(fname)           
         elif label[0] == 2:
             manypeopleCount = manypeopleCount + 1
-            #wrongPredictionList.append(fname)
+            wrongPredictionList.append(fname)
         elif label[0] == 3:
             nopeopleCount = nopeopleCount + 1
             wrongPredictionList.append(fname)
