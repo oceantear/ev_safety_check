@@ -33,7 +33,7 @@ def saveImage(data):
     if startSaveImageFlag == True:
         count = count + 1
         #frame rate : 10, 1ps/sec
-        if count != 10:
+        if count != 5:
             return
         count = 0
 
